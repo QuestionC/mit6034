@@ -113,6 +113,7 @@ class Product(list, Expression):
                 factors += list(factor)
             else:
                 factors.append(factor)
+        
         result = Product([1])
         for factor in factors:
             result = multiply(result, simplify_if_possible(factor))
@@ -173,6 +174,11 @@ def do_multiply(expr1, expr2):
     Look above for details on the Sum and Product classes. The Python operator
     '*' will not help you.
     """
-    # Replace this with your solution.
-    raise NotImplementedError
-
+    if isinstance(expr1, Sum):
+        result = Sum(multiply(i, expr2) for i in expr1)
+    elif isinstance(expr2, Sum):
+        result = Sum(multiply(expr1, i) for i in expr2)
+    else:
+        result = Product(expr1 + expr2)
+    
+    return result
