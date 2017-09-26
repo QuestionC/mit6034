@@ -115,9 +115,9 @@ TEST_RESULTS_TRANS2 = forward_chain([transitive_rule],
 # Then, put them together into a list in order, and call it
 # family_rules.
 family_rules = [ 
-        IF( 'male (?x)', THEN( '(?x) is (?x)')),
-        IF( 'female (?x)', THEN( '(?x) is (?x)')),
-        IF( AND('parent (?p) (?x)', 'parent (?p) (?y)', NOT('(?x) is (?y)')),
+        IF( 'male (?x)', THEN( 'self (?x) (?x)')),
+        IF( 'female (?x)', THEN( 'self (?x) (?x)')),
+        IF( AND('parent (?p) (?x)', 'parent (?p) (?y)', NOT('self (?x) (?y)')),
             THEN( 'sibling (?x) (?y)')),
         IF( AND('sibling (?x) (?y)', 'male (?x)'),
             THEN( 'brother (?x) (?y)')),
@@ -131,7 +131,7 @@ family_rules = [
             THEN( 'son (?x) (?p)')),
         IF( AND('parent (?p) (?x)', 'female (?x)'),
             THEN( 'daughter (?x) (?p)')),
-        IF( AND('parent (?xp) (?x)', 'parent(?yp) (?y)', 'sibling (?xp) (?yp)'),
+        IF( AND('sibling (?px) (?py)', 'parent (?px) (?x)', 'parent (?py) (?y)'),
             THEN( 'cousin (?x) (?y)')),
         ]                    # fill me in
 
