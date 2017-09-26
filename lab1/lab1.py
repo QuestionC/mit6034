@@ -17,7 +17,7 @@ from production import IF, AND, OR, NOT, THEN, forward_chain
 #    2. the consequent
 #    3. both
 
-ANSWER_1 = 'your answer here'
+ANSWER_1 = '2'
 
 # A rule-based system about Monty Python's "Dead Parrot" sketch
 # uses the following rules:
@@ -37,10 +37,10 @@ ANSWER_1 = 'your answer here'
 
 # Will this system produce the datum 'Polly is pining for the
 # fjords'?  Answer 'yes' or 'no'.
-ANSWER_2 = 'your answer here'
+ANSWER_2 = 'no'
 
 # Which rule contains a programming error? Answer '1' or '2'.
-ANSWER_3 = 'your answer here'
+ANSWER_3 = '2'
 
 # If you're uncertain of these answers, look in tests.py for an
 # explanation.
@@ -69,11 +69,11 @@ ANSWER_3 = 'your answer here'
 # what is asked.  After we start the system running, which rule
 # fires first?
 
-ANSWER_4 = 'your answer here'
+ANSWER_4 = '1'
 
 # Which rule fires second?
 
-ANSWER_5 = 'your answer here'
+ANSWER_5 = '0'
 
 
 # Problem 1.3.1: Poker hands
@@ -90,7 +90,7 @@ poker_data = ( 'two-pair beats pair',
 # which poker hands beat which, transitively. For example, it
 # should be able to deduce that a three-of-a-kind beats a pair,
 # because a three-of-a-kind beats two-pair, which beats a pair.
-transitive_rule = IF( AND(), THEN() )
+transitive_rule = IF( AND('(?x) beats (?y)', '(?y) beats (?z)'), THEN ( '(?x) beats (?z)') )
 
 # You can test your rule like this:
 # print forward_chain([transitive_rule], poker_data)
@@ -114,7 +114,26 @@ TEST_RESULTS_TRANS2 = forward_chain([transitive_rule],
 
 # Then, put them together into a list in order, and call it
 # family_rules.
-family_rules = [ ]                    # fill me in
+family_rules = [ 
+        IF( 'male (?x)', THEN( '(?x) is (?x)')),
+        IF( 'female (?x)', THEN( '(?x) is (?x)')),
+        IF( AND('parent (?p) (?x)', 'parent (?p) (?y)', NOT('(?x) is (?y)')),
+            THEN( 'sibling (?x) (?y)')),
+        IF( AND('sibling (?x) (?y)', 'male (?x)'),
+            THEN( 'brother (?x) (?y)')),
+        IF( AND('sibling (?x) (?y)', 'female (?x)'),
+            THEN( 'sister (?x) (?y)')),
+        IF( AND('parent (?p) (?x)', 'female (?p)'),
+            THEN( 'mother (?p) (?x)')),
+        IF( AND('parent (?p) (?x)', 'male (?p)'),
+            THEN( 'father (?p) (?x)')),
+        IF( AND('parent (?p) (?x)', 'male (?x)'),
+            THEN( 'son (?x) (?p)')),
+        IF( AND('parent (?p) (?x)', 'female (?x)'),
+            THEN( 'daughter (?x) (?p)')),
+        IF( AND('parent (?xp) (?x)', 'parent(?yp) (?y)', 'sibling (?xp) (?yp)'),
+            THEN( 'cousin (?x) (?y)')),
+        ]                    # fill me in
 
 # Some examples to try it on:
 # Note: These are used for testing, so DO NOT CHANGE
