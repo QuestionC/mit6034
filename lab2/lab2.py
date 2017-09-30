@@ -7,28 +7,28 @@
 
 # 1: True or false - Hill Climbing search is guaranteed to find a solution
 #    if there is a solution
-ANSWER1 = None
+ANSWER1 = False
 
 # 2: True or false - Best-first search will give an optimal search result
 #    (shortest path length).
 #    (If you don't know what we mean by best-first search, refer to
 #     http://courses.csail.mit.edu/6.034f/ai3/ch4.pdf (page 13 of the pdf).)
-ANSWER2 = None
+ANSWER2 = False
 
 # 3: True or false - Best-first search and hill climbing make use of
 #    heuristic values of nodes.
-ANSWER3 = None
+ANSWER3 = True
 
 # 4: True or false - A* uses an extended-nodes set.
-ANSWER4 = None
+ANSWER4 = True
 
 # 5: True or false - Breadth first search is guaranteed to return a path
 #    with the shortest number of nodes.
-ANSWER5 = None
+ANSWER5 = True
 
 # 6: True or false - The regular branch and bound uses heuristic values
 #    to speed up the search for an optimal path.
-ANSWER6 = None
+ANSWER6 = False
 
 # Import the Graph data structure from 'search.py'
 # Refer to search.py for documentation
@@ -40,19 +40,79 @@ from search import Graph
 # The online tester will not test them.
 
 def bfs(graph, start, goal):
-    raise NotImplementedError
+    to_visit = [ [start] ]
+    
+    while len(to_visit) > 0:
+        f = to_visit[0]
+        to_visit = to_visit[1:]
+        curr_node = f[-1]
+
+        if curr_node == goal:
+            return f
+        
+        connected_nodes = graph.get_connected_nodes(curr_node)
+        # print ('{} -> {}', curr_node, connected_nodes)
+        for N in connected_nodes:
+            if N in f:
+                continue
+            temp = list(f)
+            temp.append(N)
+            to_visit.append(temp)
+
+    return None
 
 ## Once you have completed the breadth-first search,
 ## this part should be very simple to complete.
 def dfs(graph, start, goal):
-    raise NotImplementedError
+    to_visit = [ [start] ]
+    
+    while len(to_visit) > 0:
+        f = to_visit[0]
+        curr_node = f[-1]
 
+        if curr_node == goal:
+            break
+        
+        to_visit = to_visit[1:]
+        
+        connected_nodes = graph.get_connected_nodes(curr_node)
+        for N in connected_nodes:
+            if N in f:
+                continue
+            temp = list(f)
+            temp.append(N)
+            to_visit = [temp] + to_visit
+
+    if len(to_visit) == 0:
+        return None
+
+    return f
+
+import heapq
 
 ## Now we're going to add some heuristics into the search.  
 ## Remember that hill-climbing is a modified version of depth-first search.
 ## Search direction should be towards lower heuristic values to the goal.
 def hill_climbing(graph, start, goal):
-    raise NotImplementedError
+    to_visit = [ (graph.get_heuristic(start, goal), [start]) ]
+   
+    while len(to_visit) > 0:
+        f = heapq.heappop(to_visit)[1]
+        curr_node = f[-1]
+
+        if curr_node == goal:
+            return f
+
+        connected_nodes = graph.get_connected_nodes(curr_node)
+        for N in connected_nodes:
+            if N in f: # Would create path cycle
+                continue
+            temp = list(f)
+            temp.append(N)
+
+            heapq.heappush(to_visit, (graph.get_heuristic(N, goal), temp))
+
+    return None
 
 ## Now we're going to implement beam search, a variation on BFS
 ## that caps the amount of memory used to store paths.  Remember,
