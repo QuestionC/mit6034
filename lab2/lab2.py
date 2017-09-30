@@ -97,20 +97,26 @@ def hill_climbing(graph, start, goal):
     to_visit = [ (graph.get_heuristic(start, goal), [start]) ]
    
     while len(to_visit) > 0:
-        f = heapq.heappop(to_visit)[1]
+        f = to_visit[0][1]
+        to_visit = to_visit[1:]
+
         curr_node = f[-1]
 
         if curr_node == goal:
             return f
 
         connected_nodes = graph.get_connected_nodes(curr_node)
+        # print ('{} -> {}'.format(curr_node, [(N, graph.get_heuristic(N, goal)) for N in connected_nodes]))
+        valid_paths = []
         for N in connected_nodes:
             if N in f: # Would create path cycle
                 continue
             temp = list(f)
             temp.append(N)
 
-            heapq.heappush(to_visit, (graph.get_heuristic(N, goal), temp))
+            valid_paths.append((graph.get_heuristic(N, goal), temp))
+        
+        to_visit = sorted(valid_paths) + to_visit
 
     return None
 
@@ -120,15 +126,45 @@ def hill_climbing(graph, start, goal):
 ## The k top candidates are to be determined using the 
 ## graph get_heuristic function, with lower values being better values.
 def beam_search(graph, start, goal, beam_width):
-    raise NotImplementedError
+    to_visit = [ (graph.get_heuristic(start, goal), [start] ) ]
+    
+    while len(to_visit) > 0:
+        next_nodes = []
+
+        for _,f in to_visit:
+            curr_node = f[-1] 
+
+            if curr_node == goal:
+                return f
+            
+            connected_nodes = graph.get_connected_nodes(curr_node)
+            # print ('{} -> {}'.format(curr_node, [(N, graph.get_heuristic(N, goal)) for N in connected_nodes]))
+            
+            for N in connected_nodes:
+                if N in f:
+                    continue
+                temp = list(f)
+                temp.append(N)
+        
+                next_nodes.append((graph.get_heuristic(N, goal), temp))
+
+        to_visit = sorted(next_nodes)[:beam_width]
+
+    return []
 
 ## Now we're going to try optimal search.  The previous searches haven't
 ## used edge distances in the calculation.
 
+
 ## This function takes in a graph and a list of node names, and returns
 ## the sum of edge lengths along the path -- the total distance in the path.
 def path_length(graph, node_names):
-    raise NotImplementedError
+    L = 0
+    for A,B in zip(node_names[:-1], node_names[1:]):
+        edge = graph.get_edge(A,B)
+        L += edge.length
+
+    return L
 
 
 def branch_and_bound(graph, start, goal):
