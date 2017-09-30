@@ -236,10 +236,49 @@ def a_star(graph, start, goal):
 ## consistent, but not admissible?
 
 def is_admissible(graph, goal):
-    raise NotImplementedError
+    # Admissible means the heuristic is shorter than the shortest path.
+    # Let's visit every node and make sure the shortest path is longer than that node's heuristic
+
+    to_visit = [ (0, goal) ]
+    distance = {goal: 0}
+    if graph.get_heuristic(goal, goal) > 0:
+        return False
+
+    while len(to_visit) > 0:
+        curr_distance = to_visit[0][0]
+        f = to_visit[0][1]
+        curr_node = f[-1]
+
+        to_visit = to_visit[1:]
+
+        connected_nodes = graph.get_connected_nodes(curr_node)
+        for N in connected_nodes:
+            if N in f: # cycle
+                continue
+
+            edge_length = graph.get_edge(curr_node, N).length
+            N_distance = curr_distance + edge_length
+
+            if N in distance and distance[N] < N_distance: # We already know a shorter path
+                continue
+
+            distance[N] = N_distance
+            if graph.get_heuristic(N, goal) > N_distance:
+                return False
+
+            new_path = f + N
+            heapq.heappush(to_visit, (N_distance, new_path))
+
+    return True
 
 def is_consistent(graph, goal):
-    raise NotImplementedError
+    # A graph is consistent if each edge length is >= the heuristic distance difference between the edge's nodes
+    for E in graph.edges:
+        N1 = E.node1
+        N2 = E.node2
+        if abs(graph.get_heuristic(N1, goal) - graph.get_heuristic(N2, goal)) > E.length:
+            return False
+    return True
 
 HOW_MANY_HOURS_THIS_PSET_TOOK = ''
 WHAT_I_FOUND_INTERESTING = ''
