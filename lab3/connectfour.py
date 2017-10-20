@@ -97,7 +97,7 @@ class ConnectFourBoard(object):
         'is_win_for_player()' function.  It is fine to not specify them, but if they
         are specified, they must be correct.
         """
-        if sys.stdout.encoding and 'UTF' not in sys.stdout.encoding: # If we don't support Unicode
+        if True or sys.stdout.encoding and 'UTF' not in sys.stdout.encoding: # If we don't support Unicode
             self.board_symbol_mapping = self.board_symbol_mapping_ascii
         
         if board_array == None:
