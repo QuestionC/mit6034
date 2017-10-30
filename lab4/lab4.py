@@ -1,149 +1,175 @@
-from classify import *
-import math
+# MIT 6.034 Lab 4: Constraint Satisfaction Problems
+# Written by 6.034 staff
 
-##
-## CSP portion of lab 4.
-##
-from csp import BinaryConstraint, CSP, CSPState, Variable,\
-    basic_constraint_checker, solve_csp_problem
+from constraint_api import *
+from test_problems import get_pokemon_problem
 
-# Implement basic forward checking on the CSPState see csp.py
-def forward_checking(state, verbose=False):
-    # Before running Forward checking we must ensure
-    # that constraints are okay for this state.
-    basic = basic_constraint_checker(state, verbose)
-    if not basic:
-        return False
 
-    # Add your forward checking logic here.
-    
+#### Part 1: Warmup ############################################################
+
+def has_empty_domains(csp) :
+    """Returns True if the problem has one or more empty domains, otherwise False"""
     raise NotImplementedError
 
-# Now Implement forward checking + (constraint) propagation through
-# singleton domains.
-def forward_checking_prop_singleton(state, verbose=False):
-    # Run forward checking first.
-    fc_checker = forward_checking(state, verbose)
-    if not fc_checker:
-        return False
-
-    # Add your propagate singleton logic here.
+def check_all_constraints(csp) :
+    """Return False if the problem's assigned values violate some constraint,
+    otherwise True"""
     raise NotImplementedError
 
-## The code here are for the tester
-## Do not change.
-from moose_csp import moose_csp_problem
-from map_coloring_csp import map_coloring_csp_problem
 
-def csp_solver_tree(problem, checker):
-    problem_func = globals()[problem]
-    checker_func = globals()[checker]
-    answer, search_tree = problem_func().solve(checker_func)
-    return search_tree.tree_to_string(search_tree)
+#### Part 2: Depth-First Constraint Solver #####################################
 
-##
-## CODE for the learning portion of lab 4.
-##
-
-### Data sets for the lab
-## You will be classifying data from these sets.
-senate_people = read_congress_data('S110.ord')
-senate_votes = read_vote_data('S110desc.csv')
-
-house_people = read_congress_data('H110.ord')
-house_votes = read_vote_data('H110desc.csv')
-
-last_senate_people = read_congress_data('S109.ord')
-last_senate_votes = read_vote_data('S109desc.csv')
+def solve_constraint_dfs(problem) :
+    """
+    Solves the problem using depth-first search.  Returns a tuple containing:
+    1. the solution (a dictionary mapping variables to assigned values)
+    2. the number of extensions made (the number of problems popped off the agenda).
+    If no solution was found, return None as the first element of the tuple.
+    """
+    raise NotImplementedError
 
 
-### Part 1: Nearest Neighbors
-## An example of evaluating a nearest-neighbors classifier.
-senate_group1, senate_group2 = crosscheck_groups(senate_people)
-#evaluate(nearest_neighbors(hamming_distance, 1), senate_group1, senate_group2, verbose=1)
+# QUESTION 1: How many extensions does it take to solve the Pokemon problem
+#    with DFS?
 
-## Write the euclidean_distance function.
-## This function should take two lists of integers and
-## find the Euclidean distance between them.
-## See 'hamming_distance()' in classify.py for an example that
-## computes Hamming distances.
+# Hint: Use get_pokemon_problem() to get a new copy of the Pokemon problem
+#    each time you want to solve it with a different search method.
 
-def euclidean_distance(list1, list2):
-    # this is not the right solution!
-    return hamming_distance(list1, list2)
-
-#Once you have implemented euclidean_distance, you can check the results:
-#evaluate(nearest_neighbors(euclidean_distance, 1), senate_group1, senate_group2)
-
-## By changing the parameters you used, you can get a classifier factory that
-## deals better with independents. Make a classifier that makes at most 3
-## errors on the Senate.
-
-my_classifier = nearest_neighbors(hamming_distance, 1)
-#evaluate(my_classifier, senate_group1, senate_group2, verbose=1)
-
-### Part 2: ID Trees
-#print CongressIDTree(senate_people, senate_votes, homogeneous_disorder)
-
-## Now write an information_disorder function to replace homogeneous_disorder,
-## which should lead to simpler trees.
-
-def information_disorder(yes, no):
-    return homogeneous_disorder(yes, no)
-
-#print CongressIDTree(senate_people, senate_votes, information_disorder)
-#evaluate(idtree_maker(senate_votes, homogeneous_disorder), senate_group1, senate_group2)
-
-## Now try it on the House of Representatives. However, do it over a data set
-## that only includes the most recent n votes, to show that it is possible to
-## classify politicians without ludicrous amounts of information.
-
-def limited_house_classifier(house_people, house_votes, n, verbose = False):
-    house_limited, house_limited_votes = limit_votes(house_people,
-    house_votes, n)
-    house_limited_group1, house_limited_group2 = crosscheck_groups(house_limited)
-
-    if verbose:
-        print "ID tree for first group:"
-        print CongressIDTree(house_limited_group1, house_limited_votes,
-                             information_disorder)
-        print
-        print "ID tree for second group:"
-        print CongressIDTree(house_limited_group2, house_limited_votes,
-                             information_disorder)
-        print
-        
-    return evaluate(idtree_maker(house_limited_votes, information_disorder),
-                    house_limited_group1, house_limited_group2)
-
-                                   
-## Find a value of n that classifies at least 430 representatives correctly.
-## Hint: It's not 10.
-N_1 = 10
-rep_classified = limited_house_classifier(house_people, house_votes, N_1)
-
-## Find a value of n that classifies at least 90 senators correctly.
-N_2 = 10
-senator_classified = limited_house_classifier(senate_people, senate_votes, N_2)
-
-## Now, find a value of n that classifies at least 95 of last year's senators correctly.
-N_3 = 10
-old_senator_classified = limited_house_classifier(last_senate_people, last_senate_votes, N_3)
+ANSWER_1 = None
 
 
-## The standard survey questions.
-HOW_MANY_HOURS_THIS_PSET_TOOK = ""
-WHAT_I_FOUND_INTERESTING = ""
-WHAT_I_FOUND_BORING = ""
+#### Part 3: Forward Checking ##################################################
+
+def eliminate_from_neighbors(csp, var) :
+    """
+    Eliminates incompatible values from var's neighbors' domains, modifying
+    the original csp.  Returns an alphabetically sorted list of the neighboring
+    variables whose domains were reduced, with each variable appearing at most
+    once.  If no domains were reduced, returns empty list.
+    If a domain is reduced to size 0, quits immediately and returns None.
+    """
+    raise NotImplementedError
+
+# Because names give us power over things (you're free to use this alias)
+forward_check = eliminate_from_neighbors
+
+def solve_constraint_forward_checking(problem) :
+    """
+    Solves the problem using depth-first search with forward checking.
+    Same return type as solve_constraint_dfs.
+    """
+    raise NotImplementedError
 
 
-## This function is used by the tester, please don't modify it!
-def eval_test(eval_fn, group1, group2, verbose = 0):
-    """ Find eval_fn in globals(), then execute evaluate() on it """
-    # Only allow known-safe eval_fn's
-    if eval_fn in [ 'my_classifier' ]:
-        return evaluate(globals()[eval_fn], group1, group2, verbose)
-    else:
-        raise Exception, "Error: Tester tried to use an invalid evaluation function: '%s'" % eval_fn
+# QUESTION 2: How many extensions does it take to solve the Pokemon problem
+#    with DFS and forward checking?
 
-    
+ANSWER_2 = None
+
+
+#### Part 4: Domain Reduction ##################################################
+
+def domain_reduction(csp, queue=None) :
+    """
+    Uses constraints to reduce domains, propagating the domain reduction
+    to all neighbors whose domains are reduced during the process.
+    If queue is None, initializes propagation queue by adding all variables in
+    their default order. 
+    Returns a list of all variables that were dequeued, in the order they
+    were removed from the queue.  Variables may appear in the list multiple times.
+    If a domain is reduced to size 0, quits immediately and returns None.
+    This function modifies the original csp.
+    """
+    raise NotImplementedError
+
+
+# QUESTION 3: How many extensions does it take to solve the Pokemon problem
+#    with DFS (no forward checking) if you do domain reduction before solving it?
+
+ANSWER_3 = None
+
+
+def solve_constraint_propagate_reduced_domains(problem) :
+    """
+    Solves the problem using depth-first search with forward checking and
+    propagation through all reduced domains.  Same return type as
+    solve_constraint_dfs.
+    """
+    raise NotImplementedError
+
+
+# QUESTION 4: How many extensions does it take to solve the Pokemon problem
+#    with forward checking and propagation through reduced domains?
+
+ANSWER_4 = None
+
+
+#### Part 5A: Generic Domain Reduction #########################################
+
+def propagate(enqueue_condition_fn, csp, queue=None) :
+    """
+    Uses constraints to reduce domains, modifying the original csp.
+    Uses enqueue_condition_fn to determine whether to enqueue a variable whose
+    domain has been reduced. Same return type as domain_reduction.
+    """
+    raise NotImplementedError
+
+def condition_domain_reduction(csp, var) :
+    """Returns True if var should be enqueued under the all-reduced-domains
+    condition, otherwise False"""
+    raise NotImplementedError
+
+def condition_singleton(csp, var) :
+    """Returns True if var should be enqueued under the singleton-domains
+    condition, otherwise False"""
+    raise NotImplementedError
+
+def condition_forward_checking(csp, var) :
+    """Returns True if var should be enqueued under the forward-checking
+    condition, otherwise False"""
+    raise NotImplementedError
+
+
+#### Part 5B: Generic Constraint Solver ########################################
+
+def solve_constraint_generic(problem, enqueue_condition=None) :
+    """
+    Solves the problem, calling propagate with the specified enqueue
+    condition (a function). If enqueue_condition is None, uses DFS only.
+    Same return type as solve_constraint_dfs.
+    """
+    raise NotImplementedError
+
+# QUESTION 5: How many extensions does it take to solve the Pokemon problem
+#    with forward checking and propagation through singleton domains? (Don't
+#    use domain reduction before solving it.)
+
+ANSWER_5 = None
+
+
+#### Part 6: Defining Custom Constraints #######################################
+
+def constraint_adjacent(m, n) :
+    """Returns True if m and n are adjacent, otherwise False.
+    Assume m and n are ints."""
+    raise NotImplementedError
+
+def constraint_not_adjacent(m, n) :
+    """Returns True if m and n are NOT adjacent, otherwise False.
+    Assume m and n are ints."""
+    raise NotImplementedError
+
+def all_different(variables) :
+    """Returns a list of constraints, with one difference constraint between
+    each pair of variables."""
+    raise NotImplementedError
+
+
+#### SURVEY ####################################################################
+
+NAME = None
+COLLABORATORS = None
+HOW_MANY_HOURS_THIS_LAB_TOOK = None
+WHAT_I_FOUND_INTERESTING = None
+WHAT_I_FOUND_BORING = None
+SUGGESTIONS = None
