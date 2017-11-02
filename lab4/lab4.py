@@ -89,9 +89,9 @@ def eliminate_from_neighbors(csp, var):
     once.  If no domains were reduced, returns empty list.
     If a domain is reduced to size 0, quits immediately and returns None.
     """
-    print ('Var: {}'.format(var))
-    print ('Domain: {}'.format(csp.get_domain(var)))
-    print (csp)
+    # print ('Var: {}'.format(var))
+    # print ('Domain: {}'.format(csp.get_domain(var)))
+    # print (csp)
 
     # We need to group constraints together for Test 22
     constraints = {}
@@ -137,8 +137,8 @@ def eliminate_from_neighbors(csp, var):
             else:
                 csp.set_domain(neighbor, new_domain)
 
-    print('---RESULT---')
-    print(csp)
+    # print('---RESULT---')
+    # print(csp)
     return reduced_domains
 
 # Because names give us power over things (you're free to use this alias)
@@ -149,7 +149,7 @@ def solve_constraint_forward_checking(problem) :
     Solves the problem using depth-first search with forward checking.
     Same return type as solve_constraint_dfs.
     """
-    print ('Problem: {}'.format(problem))
+    # print ('Problem: {}'.format(problem))
 
     extensions= 0
 
@@ -159,7 +159,7 @@ def solve_constraint_forward_checking(problem) :
         curr_problem = agenda[0]
         extensions += 1
 
-        print ('{}. Considering: {}'.format(extensions, curr_problem.domains))
+        # print ('{}. Considering: {}'.format(extensions, curr_problem.domains))
 
         if extensions == 9 or extensions == 10:
             print (curr_problem)
