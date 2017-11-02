@@ -9,12 +9,19 @@ from test_problems import get_pokemon_problem
 
 def has_empty_domains(csp) :
     """Returns True if the problem has one or more empty domains, otherwise False"""
-    raise NotImplementedError
-
+    # Pep8: For sequences, (strings, lists, tuples), use the fact that empty sequences are false.
+    return any(not csp.domains[k] for k in csp.domains)
+    
 def check_all_constraints(csp) :
     """Return False if the problem's assigned values violate some constraint,
     otherwise True"""
-    raise NotImplementedError
+    # print(csp)
+    for constraint in csp.constraints:
+        if constraint.var1 in csp.assignments and constraint.var2 in csp.assignments:
+            if not constraint.constraint_fn(csp.assignments[constraint.var1], csp.assignments[constraint.var2]):
+                # Constraint violated
+                return False
+    return True
 
 
 #### Part 2: Depth-First Constraint Solver #####################################
@@ -26,8 +33,42 @@ def solve_constraint_dfs(problem) :
     2. the number of extensions made (the number of problems popped off the agenda).
     If no solution was found, return None as the first element of the tuple.
     """
-    raise NotImplementedError
+    # print ('---PROBLEM---')
+    # print (problem)
 
+    extensions = 0
+    
+    # I guess the agenda is the queue?
+    agenda = [problem]
+
+    while agenda:
+        curr_problem = agenda[0]
+        extensions += 1
+
+        # print ('---CURR_PROBLEM---')
+        # print (curr_problem)
+
+        if has_empty_domains(curr_problem) or not check_all_constraints(curr_problem):
+            agenda = agenda[1:]
+            continue
+
+        if not curr_problem.unassigned_vars:
+            break
+
+        curr_var = curr_problem.pop_next_unassigned_var()
+
+        append_to_front = []
+        for value in curr_problem.get_domain(curr_var):
+            new_problem = curr_problem.copy()
+            new_problem.set_assignment(curr_var, value)
+            append_to_front.append(new_problem)
+
+        agenda = append_to_front + agenda[1:]
+
+    if agenda:
+        return (agenda[0].assignments, extensions)
+    else:
+        return (None, extensions)
 
 # QUESTION 1: How many extensions does it take to solve the Pokemon problem
 #    with DFS?
@@ -35,12 +76,12 @@ def solve_constraint_dfs(problem) :
 # Hint: Use get_pokemon_problem() to get a new copy of the Pokemon problem
 #    each time you want to solve it with a different search method.
 
-ANSWER_1 = None
+ANSWER_1 = solve_constraint_dfs(get_pokemon_problem())[1]
 
 
 #### Part 3: Forward Checking ##################################################
 
-def eliminate_from_neighbors(csp, var) :
+def eliminate_from_neighbors(csp, var):
     """
     Eliminates incompatible values from var's neighbors' domains, modifying
     the original csp.  Returns an alphabetically sorted list of the neighboring
@@ -48,7 +89,57 @@ def eliminate_from_neighbors(csp, var) :
     once.  If no domains were reduced, returns empty list.
     If a domain is reduced to size 0, quits immediately and returns None.
     """
-    raise NotImplementedError
+    print ('Var: {}'.format(var))
+    print ('Domain: {}'.format(csp.get_domain(var)))
+    print (csp)
+
+    # We need to group constraints together for Test 22
+    constraints = {}
+    for constraint in csp.get_all_constraints():
+        key = (constraint.var1, constraint.var2)
+
+        if not key in constraints:
+            constraints[key] = [constraint]
+        else:
+            constraints[key].append(constraint)
+
+    # The list of values whose domains were recuduced by this function.
+    reduced_domains = []
+
+    for neighbor in csp.get_neighbors(var):
+        # print ('Neighbor {}'.format(neighbor))
+        orig_domain = csp.get_domain(neighbor)
+
+        if var < neighbor:
+            key = (var, neighbor)
+            test = lambda var, neighbor: all(C.check(var, neighbor) for C in constraints[key])
+        else:
+            key = (neighbor, var)
+            test = lambda var, neighbor: all(C.check(neighbor, var) for C in constraints[key])
+
+        if key in constraints:
+            new_domain = [domain_val for domain_val in orig_domain if any(test(assigned_val, domain_val) for assigned_val in csp.get_domain(var))]
+        else:
+            new_domain = orig_domain
+
+        # print ('new_domain: {}'.format(new_domain))
+        # print ('orig_domain: {}'.format(orig_domain))
+        if new_domain != orig_domain:
+            if not new_domain:
+                # Return None if any domain is reduced to nothing
+                csp.set_domain(neighbor, [])
+                return None
+
+            reduced_domains.append(neighbor)
+
+            if len(new_domain) == 1:
+                csp.set_assignment(neighbor, new_domain[0])
+            else:
+                csp.set_domain(neighbor, new_domain)
+
+    print('---RESULT---')
+    print(csp)
+    return reduced_domains
 
 # Because names give us power over things (you're free to use this alias)
 forward_check = eliminate_from_neighbors
@@ -58,7 +149,45 @@ def solve_constraint_forward_checking(problem) :
     Solves the problem using depth-first search with forward checking.
     Same return type as solve_constraint_dfs.
     """
-    raise NotImplementedError
+    print ('Problem: {}'.format(problem))
+
+    extensions= 0
+
+    agenda = [problem]
+
+    while agenda:
+        curr_problem = agenda[0]
+        extensions += 1
+
+        print ('{}. Considering: {}'.format(extensions, curr_problem.domains))
+
+        if extensions == 9 or extensions == 10:
+            print (curr_problem)
+
+        if has_empty_domains(curr_problem) or not check_all_constraints(curr_problem):
+            agenda = agenda[1:]
+            continue
+
+        if not curr_problem.unassigned_vars:
+            break
+
+        curr_var = curr_problem.pop_next_unassigned_var()
+
+        append_to_front = []
+        for value in curr_problem.get_domain(curr_var):
+            new_problem = curr_problem.copy()
+            new_problem.set_assignment(curr_var, value)
+            
+            eliminate_from_neighbors(new_problem, curr_var)
+
+            append_to_front.append(new_problem)
+
+        agenda = append_to_front + agenda[1:]
+
+    if agenda:
+        return (agenda[0].assignments, extensions)
+    else:
+        return (None, extensions)
 
 
 # QUESTION 2: How many extensions does it take to solve the Pokemon problem
