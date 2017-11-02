@@ -18,8 +18,10 @@ INF = float('inf')
 def id_tree_classify_point(point, id_tree):
     """Uses the input ID tree (an IdentificationTreeNode) to classify the point.
     Returns the point's classification."""
-    raise NotImplementedError
+    while not id_tree.is_leaf():
+        id_tree = id_tree.apply_classifier(point)
 
+    return id_tree.get_node_classification()
 
 #### Part 1B: Splitting data with a classifier #################################
 
@@ -27,7 +29,15 @@ def split_on_classifier(data, classifier):
     """Given a set of data (as a list of points) and a Classifier object, uses
     the classifier to partition the data.  Returns a dict mapping each feature
     values to a list of points that have that value."""
-    raise NotImplementedError
+    result = {}
+    for D in data:
+        classification = classifier.classify(D)
+        if classification not in result:
+            result[classification] = [D]
+        else:
+            result[classification].append(D)
+
+    return result
 
 
 #### Part 1C: Calculating disorder #############################################
@@ -36,20 +46,31 @@ def branch_disorder(data, target_classifier):
     """Given a list of points representing a single branch and a Classifier
     for determining the true classification of each point, computes and returns
     the disorder of the branch."""
-    raise NotImplementedError
+    split = split_on_classifier(data, target_classifier)
+
+    num_points = len(data)
+    branch_points = lambda x: len(split[x])
+
+    disorder = lambda x: 0 if branch_points(x) == 0 else -1 * branch_points(x) / num_points * log2(branch_points(x) / num_points)
+    total_disorder = sum(disorder(x) for x in split)
+
+    return total_disorder
 
 def average_test_disorder(data, test_classifier, target_classifier):
     """Given a list of points, a feature-test Classifier, and a Classifier
     for determining the true classification of each point, computes and returns
     the disorder of the feature-test stump."""
-    raise NotImplementedError
+    split = split_on_classifier(data, test_classifier)
+
+    result = sum(len(split[x]) / len(data) * branch_disorder(split[x], target_classifier) for x in split)
+    return result
 
 
 ## To use your functions to solve part A2 of the "Identification of Trees"
 ## problem from 2014 Q2, uncomment the lines below and run lab5.py:
 
-# for classifier in tree_classifiers:
-#     print(classifier.name, average_test_disorder(tree_data, classifier, feature_test("tree_type")))
+#for classifier in tree_classifiers:
+#    print(classifier.name, average_test_disorder(tree_data, classifier, feature_test("tree_type")))
 
 
 #### Part 1D: Constructing an ID tree ##########################################
@@ -60,8 +81,21 @@ def find_best_classifier(data, possible_classifiers, target_classifier):
     finds and returns the classifier with the lowest disorder.  Breaks ties by
     preferring classifiers that appear earlier in the list.  If the best
     classifier has only one branch, raises NoGoodClassifiersError."""
-    raise NotImplementedError
+    options = list((average_test_disorder(data, C, target_classifier), C) for C in possible_classifiers)
 
+    result = None
+    M = 0
+    for val in options:
+        if result == None or val[0] < M:
+            M = val[0]
+            result = val[1]
+
+     
+    # If the best classifier has only one branch, raises NoGoodClassifiersError.
+    if all(result.classify(A) == result.classify(B) for A,B in zip(data, data[1:])):
+        raise NoGoodClassifiersError
+
+    return result
 
 ## To find the best classifier from 2014 Q2, Part A, uncomment:
 # print(find_best_classifier(tree_data, tree_classifiers, feature_test("tree_type")))
