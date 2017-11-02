@@ -90,7 +90,6 @@ def find_best_classifier(data, possible_classifiers, target_classifier):
             M = val[0]
             result = val[1]
 
-     
     # If the best classifier has only one branch, raises NoGoodClassifiersError.
     if all(result.classify(A) == result.classify(B) for A,B in zip(data, data[1:])):
         raise NoGoodClassifiersError
@@ -106,8 +105,31 @@ def construct_greedy_id_tree(data, possible_classifiers, target_classifier, id_t
     optionally a partially completed ID tree, returns a completed ID tree by
     adding classifiers and classifications until either perfect classification
     has been achieved, or there are no good classifiers left."""
-    raise NotImplementedError
 
+    if id_tree_node == None:
+        id_tree_node = IdentificationTreeNode(target_classifier)
+   
+    if not data:
+        raise 'I dunno how to deal with no data'
+
+    first_datum = target_classifier.classify(data[0])
+
+    is_homogenous = all(target_classifier.classify(D) == first_datum for D in data)
+
+    if is_homogenous:
+        id_tree_node.set_node_classification(first_datum)
+    else:
+        try:
+            C = find_best_classifier(data, possible_classifiers, target_classifier)
+
+            split = split_on_classifier(data, C)
+            id_tree_node.set_classifier_and_expand(C, list(s for s in split))
+            for branch in id_tree_node.get_branches():
+                construct_greedy_id_tree(split[branch], list(p for p in possible_classifiers if p != C), target_classifier, id_tree_node.get_branches()[branch])
+        except:
+            pass
+
+    return id_tree_node
 
 ## To construct an ID tree for 2014 Q2, Part A:
 # print(construct_greedy_id_tree(tree_data, tree_classifiers, feature_test("tree_type")))
@@ -123,17 +145,17 @@ def construct_greedy_id_tree(data, possible_classifiers, target_classifier, id_t
 
 #### Part 1E: Multiple choice ##################################################
 
-ANSWER_1 = None
-ANSWER_2 = None
-ANSWER_3 = None
+ANSWER_1 = 'bark_texture'
+ANSWER_2 = 'leaf_shape'
+ANSWER_3 = 'orange_foliage'
 
-ANSWER_4 = None
-ANSWER_5 = None
-ANSWER_6 = None
-ANSWER_7 = None
+ANSWER_4 = [2,3]
+ANSWER_5 = [3]
+ANSWER_6 = [2]
+ANSWER_7 = 2
 
-ANSWER_8 = None
-ANSWER_9 = None
+ANSWER_8 = 'No'
+ANSWER_9 = 'No'
 
 
 #### OPTIONAL: Construct an ID tree with medical data ##########################
