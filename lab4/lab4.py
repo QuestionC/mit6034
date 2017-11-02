@@ -132,10 +132,7 @@ def eliminate_from_neighbors(csp, var):
 
             reduced_domains.append(neighbor)
 
-            if len(new_domain) == 1:
-                csp.set_assignment(neighbor, new_domain[0])
-            else:
-                csp.set_domain(neighbor, new_domain)
+            csp.set_domain(neighbor, new_domain)
 
     # print('---RESULT---')
     # print(csp)
@@ -160,9 +157,6 @@ def solve_constraint_forward_checking(problem) :
         extensions += 1
 
         # print ('{}. Considering: {}'.format(extensions, curr_problem.domains))
-
-        if extensions == 9 or extensions == 10:
-            print (curr_problem)
 
         if has_empty_domains(curr_problem) or not check_all_constraints(curr_problem):
             agenda = agenda[1:]
@@ -193,7 +187,7 @@ def solve_constraint_forward_checking(problem) :
 # QUESTION 2: How many extensions does it take to solve the Pokemon problem
 #    with DFS and forward checking?
 
-ANSWER_2 = None
+ANSWER_2 = solve_constraint_forward_checking(get_pokemon_problem())[1]
 
 
 #### Part 4: Domain Reduction ##################################################
@@ -209,13 +203,59 @@ def domain_reduction(csp, queue=None) :
     If a domain is reduced to size 0, quits immediately and returns None.
     This function modifies the original csp.
     """
-    raise NotImplementedError
+    # print ('domain_reduction:\n{}\n{}'.format(csp, queue))
+    constraints = {}
+    for constraint in csp.get_all_constraints():
+        key = (constraint.var1, constraint.var2)
+
+        if not key in constraints:
+            constraints[key] = [constraint]
+        else:
+            constraints[key].append(constraint)
+
+    if queue == None:
+        queue = csp.get_all_variables()
+
+    visited = []
+    while queue:
+        var = queue[0]
+        queue = queue[1:]
+        visited.append(var)
+
+        for n in csp.get_neighbors(var):
+            orig_neighbor_domain = csp.get_domain(n)
+
+            if var < n:
+                key = (var, n)
+                if key not in constraints:
+                    continue
+                test = lambda var, neighbor: all(C.check(var, neighbor) for C in constraints[key])
+            else:
+                key = (n, var)
+                if key not in constraints:
+                    continue
+                test = lambda var, neighbor: all(C.check(neighbor, var) for C in constraints[key])
+
+            # Reduce the neighbors domain based on possible values
+            new_neighbor_domain = [domain_val for domain_val in orig_neighbor_domain if any(test(assigned_val, domain_val) for assigned_val in csp.get_domain(var))]
+
+            if new_neighbor_domain != orig_neighbor_domain:
+                if not new_neighbor_domain:
+                    csp.set_domain(n, [])
+                    return None
+               
+                csp.set_domain(n, new_neighbor_domain)
+
+                if not n in queue:
+                    queue.append(n)
+
+    return visited
 
 
 # QUESTION 3: How many extensions does it take to solve the Pokemon problem
 #    with DFS (no forward checking) if you do domain reduction before solving it?
 
-ANSWER_3 = None
+ANSWER_3 = 7
 
 
 def solve_constraint_propagate_reduced_domains(problem) :
@@ -224,13 +264,43 @@ def solve_constraint_propagate_reduced_domains(problem) :
     propagation through all reduced domains.  Same return type as
     solve_constraint_dfs.
     """
-    raise NotImplementedError
+   
+    extensions = 0
+    agenda = [problem]
 
+    while agenda:
+        curr_problem = agenda[0]
+        extensions += 1
+
+        if has_empty_domains(curr_problem) or not check_all_constraints(curr_problem):
+            agenda = agenda[1:]
+            continue
+
+        if not curr_problem.unassigned_vars:
+            break
+
+        curr_var = curr_problem.pop_next_unassigned_var()
+
+        append_to_front = []
+        for value in curr_problem.get_domain(curr_var):
+            new_problem = curr_problem.copy()
+            new_problem.set_assignment(curr_var, value)
+           
+            domain_reduction(new_problem, [curr_var])
+
+            append_to_front.append(new_problem)
+
+        agenda = append_to_front + agenda[1:]
+
+    if agenda:
+        return (agenda[0].assignments, extensions)
+    else:
+        return (None, extensions)
 
 # QUESTION 4: How many extensions does it take to solve the Pokemon problem
 #    with forward checking and propagation through reduced domains?
 
-ANSWER_4 = None
+ANSWER_4 = 8
 
 
 #### Part 5A: Generic Domain Reduction #########################################
@@ -241,23 +311,72 @@ def propagate(enqueue_condition_fn, csp, queue=None) :
     Uses enqueue_condition_fn to determine whether to enqueue a variable whose
     domain has been reduced. Same return type as domain_reduction.
     """
+    # print ('domain_reduction:\n{}\n{}'.format(csp, queue))
+    constraints = {}
+    for constraint in csp.get_all_constraints():
+        key = (constraint.var1, constraint.var2)
+
+        if not key in constraints:
+            constraints[key] = [constraint]
+        else:
+            constraints[key].append(constraint)
+
+    if queue == None:
+        queue = csp.get_all_variables()
+
+    visited = []
+    while queue:
+        var = queue[0]
+        queue = queue[1:]
+        visited.append(var)
+
+        for n in csp.get_neighbors(var):
+            orig_neighbor_domain = csp.get_domain(n)
+
+            if var < n:
+                key = (var, n)
+                if key not in constraints:
+                    continue
+                test = lambda var, neighbor: all(C.check(var, neighbor) for C in constraints[key])
+            else:
+                key = (n, var)
+                if key not in constraints:
+                    continue
+                test = lambda var, neighbor: all(C.check(neighbor, var) for C in constraints[key])
+
+            # Reduce the neighbors domain based on possible values
+            new_neighbor_domain = [domain_val for domain_val in orig_neighbor_domain if any(test(assigned_val, domain_val) for assigned_val in csp.get_domain(var))]
+
+            if new_neighbor_domain != orig_neighbor_domain:
+                if not new_neighbor_domain:
+                    csp.set_domain(n, [])
+                    return None
+               
+                csp.set_domain(n, new_neighbor_domain)
+
+                if not n in queue:
+                    if enqueue_condition_fn(csp, n):
+                        queue.append(n)
+
+    return visited
+
+
     raise NotImplementedError
 
 def condition_domain_reduction(csp, var) :
     """Returns True if var should be enqueued under the all-reduced-domains
     condition, otherwise False"""
-    raise NotImplementedError
+    return True
 
 def condition_singleton(csp, var) :
     """Returns True if var should be enqueued under the singleton-domains
     condition, otherwise False"""
-    raise NotImplementedError
+    return len(csp.get_domain(var)) == 1
 
 def condition_forward_checking(csp, var) :
     """Returns True if var should be enqueued under the forward-checking
     condition, otherwise False"""
-    raise NotImplementedError
-
+    return False
 
 #### Part 5B: Generic Constraint Solver ########################################
 
@@ -267,6 +386,38 @@ def solve_constraint_generic(problem, enqueue_condition=None) :
     condition (a function). If enqueue_condition is None, uses DFS only.
     Same return type as solve_constraint_dfs.
     """
+    extensions = 0
+    agenda = [problem]
+
+    while agenda:
+        curr_problem = agenda[0]
+        extensions += 1
+
+        if has_empty_domains(curr_problem) or not check_all_constraints(curr_problem):
+            agenda = agenda[1:]
+            continue
+
+        if not curr_problem.unassigned_vars:
+            break
+
+        curr_var = curr_problem.pop_next_unassigned_var()
+
+        append_to_front = []
+        for value in curr_problem.get_domain(curr_var):
+            new_problem = curr_problem.copy()
+            new_problem.set_assignment(curr_var, value)
+
+            if enqueue_condition != None:
+                propagate(enqueue_condition, new_problem, [curr_var])
+
+            append_to_front.append(new_problem)
+
+        agenda = append_to_front + agenda[1:]
+
+    if agenda:
+        return (agenda[0].assignments, extensions)
+    else:
+        return (None, extensions)
     raise NotImplementedError
 
 # QUESTION 5: How many extensions does it take to solve the Pokemon problem
@@ -281,18 +432,20 @@ ANSWER_5 = None
 def constraint_adjacent(m, n) :
     """Returns True if m and n are adjacent, otherwise False.
     Assume m and n are ints."""
-    raise NotImplementedError
+    return abs(m - n) == 1
 
 def constraint_not_adjacent(m, n) :
     """Returns True if m and n are NOT adjacent, otherwise False.
     Assume m and n are ints."""
-    raise NotImplementedError
+    return abs(m - n) != 1
 
+import itertools
 def all_different(variables) :
     """Returns a list of constraints, with one difference constraint between
     each pair of variables."""
-    raise NotImplementedError
+    constraints = [Constraint(a, b, constraint_different) for a,b in itertools.combinations(variables, 2)]
 
+    return constraints
 
 #### SURVEY ####################################################################
 
