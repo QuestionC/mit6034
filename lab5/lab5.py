@@ -174,23 +174,23 @@ if DO_OPTIONAL_SECTION:
 
 #### Part 2A: Drawing Boundaries ###############################################
 
-BOUNDARY_ANS_1 = None
-BOUNDARY_ANS_2 = None
+BOUNDARY_ANS_1 = 3
+BOUNDARY_ANS_2 = 4
 
-BOUNDARY_ANS_3 = None
-BOUNDARY_ANS_4 = None
+BOUNDARY_ANS_3 = 1
+BOUNDARY_ANS_4 = 2
 
-BOUNDARY_ANS_5 = None
-BOUNDARY_ANS_6 = None
-BOUNDARY_ANS_7 = None
-BOUNDARY_ANS_8 = None
-BOUNDARY_ANS_9 = None
+BOUNDARY_ANS_5 = 2
+BOUNDARY_ANS_6 = 4
+BOUNDARY_ANS_7 = 1
+BOUNDARY_ANS_8 = 4
+BOUNDARY_ANS_9 = 4
 
-BOUNDARY_ANS_10 = None
-BOUNDARY_ANS_11 = None
-BOUNDARY_ANS_12 = None
-BOUNDARY_ANS_13 = None
-BOUNDARY_ANS_14 = None
+BOUNDARY_ANS_10 = 4
+BOUNDARY_ANS_11 = 2
+BOUNDARY_ANS_12 = 1
+BOUNDARY_ANS_13 = 4
+BOUNDARY_ANS_14 = 4
 
 
 #### Part 2B: Distance metrics #################################################
@@ -198,46 +198,61 @@ BOUNDARY_ANS_14 = None
 def dot_product(u, v):
     """Computes dot product of two vectors u and v, each represented as a tuple
     or list of coordinates.  Assume the two vectors are the same length."""
-    raise NotImplementedError
+    return sum(a*b for a,b  in zip(u,v))
 
 def norm(v):
     "Computes length of a vector v, represented as a tuple or list of coords."
-    raise NotImplementedError
+    return math.sqrt(sum(a*a for a in v))
+
+# Return the vector from A to B as a tuple
+def vector(A, B):
+    return tuple(b - a for a,b in zip(A.coords, B.coords))
+    
 
 def euclidean_distance(point1, point2):
     "Given two Points, computes and returns the Euclidean distance between them."
-    raise NotImplementedError
+    return norm(vector(point1, point2))
 
 def manhattan_distance(point1, point2):
     "Given two Points, computes and returns the Manhattan distance between them."
-    raise NotImplementedError
+    return sum(abs(x) for x in vector(point1, point2))
 
 def hamming_distance(point1, point2):
     "Given two Points, computes and returns the Hamming distance between them."
-    raise NotImplementedError
+    return sum(a != b for a,b in zip(point1.coords,point2.coords))
 
 def cosine_distance(point1, point2):
     """Given two Points, computes and returns the cosine distance between them,
     where cosine distance is defined as 1-cos(angle_between(point1, point2))."""
-    raise NotImplementedError
+    u = point1.coords
+    v = point2.coords
+    return 1 - dot_product(u,v) / norm(u) / norm(v)
 
 
 #### Part 2C: Classifying points ###############################################
+import heapq
 
 def get_k_closest_points(point, data, k, distance_metric):
     """Given a test point, a list of points (the data), an int 0 < k <= len(data),
     and a distance metric (a function), returns a list containing the k points
     from the data that are closest to the test point, according to the distance
     metric.  Breaks ties lexicographically by coordinates."""
-    raise NotImplementedError
+
+    return heapq.nsmallest(k, data, key = lambda x: (distance_metric(point, x), str(x.coords)))
 
 def knn_classify_point(point, data, k, distance_metric):
     """Given a test point, a list of points (the data), an int 0 < k <= len(data),
     and a distance metric (a function), returns the classification of the test
     point based on its k nearest neighbors, as determined by the distance metric.
     Assumes there are no ties."""
-    raise NotImplementedError
-
+    H = get_k_closest_points(point, data, k, distance_metric)
+    counts = {}
+    for point in H:
+        if point.classification not in counts:
+            counts[point.classification] = 0
+        counts[point.classification] += 1
+   
+    return max(counts, key=lambda x: counts[x])
 
 ## To run your classify function on the k-nearest neighbors problem from 2014 Q2
 ## part B2, uncomment the line below and try different values of k:
@@ -250,14 +265,29 @@ def cross_validate(data, k, distance_metric):
     """Given a list of points (the data), an int 0 < k <= len(data), and a
     distance metric (a function), performs leave-one-out cross-validation.
     Return the fraction of points classified correctly, as a float."""
-    raise NotImplementedError
+    hits = 0
+    for i in range(len(data)):
+        training_set = data[:i] + data[i+1:]
+        test_point = data[i]
+        guess = knn_classify_point(test_point, training_set, k, distance_metric)
+        if guess == test_point.classification:
+            hits += 1
 
+    return hits / len(data)
+import itertools
 def find_best_k_and_metric(data):
     """Given a list of points (the data), uses leave-one-out cross-validation to
     determine the best value of k and distance_metric, choosing from among the
     four distance metrics defined above.  Returns a tuple (k, distance_metric),
     where k is an int and distance_metric is a function."""
-    raise NotImplementedError
+    metrics = [euclidean_distance, manhattan_distance, hamming_distance, cosine_distance]
+    best = None
+    for k,distance_metric in itertools.product(range(1, len(data)), metrics):
+        score = cross_validate(data, k, distance_metric)
+        if best == None or score > best[0]:
+            best = (score, k, distance_metric)
+   
+    return best[1:]
 
 
 ## To find the best k and distance metric for 2014 Q2, part B, uncomment:
@@ -266,14 +296,14 @@ def find_best_k_and_metric(data):
 
 #### Part 2E: More multiple choice #############################################
 
-kNN_ANSWER_1 = None
-kNN_ANSWER_2 = None
-kNN_ANSWER_3 = None
+kNN_ANSWER_1 = "Overfitting"
+kNN_ANSWER_2 = "Underfitting"
+kNN_ANSWER_3 = 4
 
-kNN_ANSWER_4 = None
-kNN_ANSWER_5 = None
-kNN_ANSWER_6 = None
-kNN_ANSWER_7 = None
+kNN_ANSWER_4 = 4
+kNN_ANSWER_5 = 1
+kNN_ANSWER_6 = 3
+kNN_ANSWER_7 = 3
 
 
 #### SURVEY ####################################################################
